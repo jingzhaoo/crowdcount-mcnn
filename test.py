@@ -2,11 +2,14 @@ import os
 import torch
 import numpy as np
 
+import sys
+sys.path.append('/srv')
+sys.path.append('/srv/src')
+
 from src.crowd_count import CrowdCounter
 from src import network
 from src.data_loader import ImageDataLoader
 from src import utils
-
 
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = False
@@ -31,7 +34,12 @@ net = CrowdCounter()
       
 trained_model = os.path.join(model_path)
 network.load_net(trained_model, net)
-net.cuda()
+
+# net.cuda()
+use_cuda = torch.cuda.is_available()
+device = torch.device("cuda" if use_cuda else "cpu")
+net.to(device)
+
 net.eval()
 mae = 0.0
 mse = 0.0
@@ -55,7 +63,7 @@ for blob in data_loader:
         
 mae = mae/data_loader.get_num_samples()
 mse = np.sqrt(mse/data_loader.get_num_samples())
-print '\nMAE: %0.2f, MSE: %0.2f' % (mae,mse)
+print('\nMAE: %0.2f, MSE: %0.2f' % (mae,mse))
 
 f = open(file_results, 'w') 
 f.write('MAE: %0.2f, MSE: %0.2f' % (mae,mse))
